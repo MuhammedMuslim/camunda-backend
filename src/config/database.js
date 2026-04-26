@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const { parse: parseConnectionString } = require('pg-connection-string');
 
 /**
  * Supabase: set `DATABASE_URL` from Project Settings → Database → Connection string (URI).
@@ -40,6 +41,15 @@ function buildPoolConfig() {
 }
 
 const pool = new Pool(buildPoolConfig());
+
+if (process.env.VERCEL && process.env.DATABASE_URL?.trim()) {
+  try {
+    const p = parseConnectionString(process.env.DATABASE_URL.trim());
+    console.log('[database] Vercel PG target:', p.host, 'port:', p.port || '(default)');
+  } catch (e) {
+    console.warn('[database] DATABASE_URL parse failed:', e.message);
+  }
+}
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
