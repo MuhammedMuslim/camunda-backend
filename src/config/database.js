@@ -14,12 +14,16 @@ function buildPoolConfig() {
 
   if (url) {
     const isSupabase = /supabase\.co/i.test(url);
+    // Transaction pooler (6543) + PgBouncer: disable prepared statements or queries can fail.
+    const isSupabaseTxPooler =
+      isSupabase && (/:6543(\/|\?|$)/.test(url) || /pgbouncer=true/i.test(url));
     return {
       connectionString: url,
       max,
       idleTimeoutMillis,
       connectionTimeoutMillis,
       ...(isSupabase ? { ssl: { rejectUnauthorized: false } } : {}),
+      ...(isSupabaseTxPooler ? { prepareThreshold: 0 } : {}),
     };
   }
 
