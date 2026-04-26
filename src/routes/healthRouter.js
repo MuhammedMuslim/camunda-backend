@@ -39,18 +39,21 @@ router.get('/health', async (req, res) => {
       if (parsed.port) body.resolvedPort = String(parsed.port);
     }
 
+    const isDirectSupabaseDb =
+      Boolean(parsed?.host?.startsWith('db.') && /\.supabase\.co$/i.test(parsed.host));
+
     if (!hasDbUrl && !hasPgEnv) {
       body.hint =
         'No DATABASE_URL or PGHOST. In Vercel → Settings → Environment Variables, add DATABASE_URL (Supabase Transaction pooler URI, port 6543), then redeploy.';
     } else if (hasDbUrl && !parsed) {
       body.hint =
         'DATABASE_URL could not be parsed. In Vercel, remove surrounding "quotes", line breaks, or spaces; paste the URI from Supabase as one line.';
+    } else if (hasDbUrl && isDirectSupabaseDb) {
+      body.hint =
+        'You are using Supabase "Direct connection" (db.*.supabase.co). That host often has no IPv4 / fails DNS from Vercel (ENOTFOUND). In Supabase → Project Settings → Database → Connection string, switch to "Transaction pooler" (not "Direct"), copy the URI (host aws-0-REGION.pooler.supabase.com, port 6543, user postgres.PROJECT_REF, ?pgbouncer=true), replace DATABASE_URL in Vercel, redeploy.';
     } else if (hasDbUrl && err.code === 'ENOTFOUND' && parsed?.host) {
       body.hint =
-        `DNS could not resolve host "${parsed.host}". That name is wrong, or your DATABASE_URL was split incorrectly. The usual cause is a password containing @, #, %, or : without URL-encoding—then the hostname is parsed as garbage. Fix: in Supabase → Project Settings → Database, copy the "Transaction pooler" connection string again and replace [YOUR-PASSWORD] in the dashboard (or encode special chars). Use host like aws-0-REGION.pooler.supabase.com (not db.PROJECT.supabase.co on Vercel if you saw DNS issues before).`;
-    } else if (hasDbUrl && parsed?.host?.startsWith('db.') && /\.supabase\.co$/i.test(parsed.host)) {
-      body.hint =
-        'Using direct db.*.supabase.co from serverless often fails (IPv6 / DNS). Switch DATABASE_URL to the Transaction pooler URI (aws-0-*.pooler.supabase.com:6543, user postgres.PROJECT_REF, ?pgbouncer=true).';
+        `DNS could not resolve "${parsed.host}". Wrong hostname, or DATABASE_URL broken (e.g. unescaped @ in password). Copy the Transaction pooler URI from Supabase (aws-0-REGION.pooler.supabase.com:6543).`;
     } else if (hasDbUrl) {
       body.hint =
         'DATABASE_URL is set but connection failed. Use Supabase Transaction pooler (port 6543), user postgres.[project-ref], include ?pgbouncer=true. See Vercel function logs for the error message.';
