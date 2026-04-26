@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:18.2-alpine3.22
+    # sha256:cf70b3d7aeb0f399ba29e94ce081380ccade1f4c38e203309068a30f49548417
+    container_name: camunda-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: camunda
+      POSTGRES_PASSWORD: camunda_secret
+      POSTGRES_DB: camunda_db
+    volumes:
+      - pgdata:/var/lib/postgresql/18/docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U camunda -d camunda_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
