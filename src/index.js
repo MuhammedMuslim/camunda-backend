@@ -13,6 +13,7 @@ const morgan = require('morgan');
 
 const dataRouter = require('./routes/dataRouter');
 const healthRouter = require('./routes/healthRouter');
+const emailRouter = require('./routes/emailRouter');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -27,6 +28,7 @@ app.use(morgan('dev'));
 // ─── Routes ─────────────────────────────────────────────────
 app.use('/api', healthRouter);
 app.use('/api/data', dataRouter);
+app.use('/api/email', emailRouter);
 
 // ─── Root ───────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -35,6 +37,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     docs: {
       health: 'GET /api/health',
+      sendEmail: 'POST /api/email/send',
       search: 'POST /api/data/:entity/search',
       create: 'POST /api/data/:entity',
       getAll: 'GET /api/data/:entity',
