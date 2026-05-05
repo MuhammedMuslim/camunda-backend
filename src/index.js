@@ -15,6 +15,7 @@ const dataRouter = require('./routes/dataRouter');
 const healthRouter = require('./routes/healthRouter');
 const emailRouter = require('./routes/emailRouter');
 const emailInboundRouter = require('./routes/emailInboundRouter');
+const camundaProxyRouter = require('./routes/camundaProxyRouter');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api', healthRouter);
 app.use('/api/data', dataRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/email', emailInboundRouter);
+app.use('/api/camunda', camundaProxyRouter);
 
 // ─── Root ───────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -41,6 +43,7 @@ app.get('/', (req, res) => {
       health: 'GET /api/health',
       sendEmail: 'POST /api/email/send',
       receiveEmail: 'POST /api/email/inbound',
+      startAbsenceProxy: 'POST /api/camunda/inbound-proxy',
       search: 'POST /api/data/:entity/search',
       create: 'POST /api/data/:entity',
       getAll: 'GET /api/data/:entity',

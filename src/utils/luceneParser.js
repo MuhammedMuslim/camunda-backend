@@ -33,6 +33,8 @@ const COLUMN_MAP = {
   timeslot: 'timeslot',
 };
 
+const CASE_INSENSITIVE_COLUMNS = new Set(['email', 'student_email']);
+
 function parseLuceneQuery(luceneQuery) {
   if (!luceneQuery || typeof luceneQuery !== 'string' || luceneQuery.trim() === '') {
     return { whereClause: '1=1', params: [] };
@@ -52,7 +54,12 @@ function parseLuceneQuery(luceneQuery) {
     const field = COLUMN_MAP[rawField.toLowerCase()] || rawField.toLowerCase();
 
     params.push(value);
-    conditions.push(`"${field}" = $${params.length}`);
+    if (CASE_INSENSITIVE_COLUMNS.has(field)) {
+      // Email comparisons should be case-insensitive.
+      conditions.push(`"${field}" ILIKE $${params.length}`);
+    } else {
+      conditions.push(`"${field}" = $${params.length}`);
+    }
   }
 
   if (conditions.length === 0) {
